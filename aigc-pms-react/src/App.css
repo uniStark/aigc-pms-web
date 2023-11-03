@@ -1,0 +1,41 @@
+.box {
+  /*background: linear-gradient(to right, #00d2ff, #3a7bd5);*/
+  /*background: radial-gradient(#00d2ff, #3a7bd5);*/
+  background: #a1a1a1;
+  margin: 50px 50px;
+  padding: 60px 150px;
+  border-radius: 15px;
+  text-align: center;
+  font-weight: bold;
+  width: 800px;
+}
+.box2 {
+
+}
+.box1 {
+  text-align: left;
+  padding-bottom: 15px;
+}
+input {
+  font-weight: 500;
+}
+textarea {
+  font-weight: 500;
+  height: 200px;
+}
+select{
+  font-weight: 500;
+  width: 100px;
+}
+button{
+  margin-top: 25px;
+}
+#module1 {
+  text-align: center;
+}
+h6 {
+  display: grid;
+  align-self: end;
+}
+
+

@@ -1,0 +1,6 @@
+server:
+  port: 9321
+
+#开启swagger注解
+swagger:
+  enabled: true
