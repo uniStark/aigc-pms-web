@@ -48,19 +48,22 @@ public class ServiceImpl implements com.service.Service {
         String outFilePath = entity.getOutFilePath();
 
         // 格式化时间为指定格式
-        String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH点mm分"));
+        String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH 点 mm 分"));
         String filePath = outFilePath + "out-" + formattedTime + ".xlsx";
 
         entity.setOutFilePath(filePath);
 
         // 记录开始时间
         long startTime = System.currentTimeMillis();
-        //生成excel文件
+        //生成 excel 文件
         createExcelFile(filePath);
 
         //去重
         List<String[]> csvs =
                 ServiceImpl.getCsv2(entity);
+
+        //去除第一条数据
+        csvs.remove(0);
 
         int totalSize = csvs.size();
         int batchSize = (int) Math.ceil(totalSize / threadCount);
@@ -89,8 +92,9 @@ public class ServiceImpl implements com.service.Service {
     public static void doMain(List<String[]> csvs, Entity entity) {
 
         int size = csvs.size() - 1;
-        log.info("共{}个线程，每个线程{}条数据，从第{}开始跑..", entity.getThreadCount(), size, index);
-        for (int i = index; i < csvs.size(); i++) {
+
+        log.info("共{}个线程，每个线程{}条数据，从第{}开始跑..", entity.getThreadCount(), size, 0);
+        for (int i = 0; i < csvs.size(); i++) {
             if (flag) {
                 String request = csvs.get(i)[1];
                 Integer csvIndex = Integer.valueOf(csvs.get(i)[0]);
@@ -98,9 +102,9 @@ public class ServiceImpl implements com.service.Service {
                 try {
                     response = doPost(request, entity);
                 } catch (Exception e) {
-                    log.warn("第" + count + "条数据请求超时，设置为null");
+                    log.warn("第" + count + "条数据请求超时，设置为 null");
                 }
-                System.out.println("第 " + count + " 个[" + csvIndex + "] 请求参数：" + request + "\n " +
+                System.out.println("第 " + count + " 个 [" + csvIndex + "] 请求参数：" + request + "\n " +
                         "返回参数：" + response);
 //                System.out.println(count + " 返回参数：" + response);
                 List<List<Object>> data = Collections.singletonList(Arrays.asList(csvIndex, request,
@@ -110,10 +114,10 @@ public class ServiceImpl implements com.service.Service {
         }
     }
 
-    //返回请求结果的answer
+    //返回请求结果的 answer
     private static String doPost(String body, Entity entity) {
 
-        // 创建RestTemplate实例
+        // 创建 RestTemplate 实例
         RestTemplate restTemplate = new RestTemplate();
 
         //设置连接超时和读取超时时间（单位：毫秒）
@@ -131,7 +135,7 @@ public class ServiceImpl implements com.service.Service {
         String requestBody = entity.getContext().replace("$query", body);
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        // 发送POST请求
+        // 发送 POST 请求
         ResponseEntity<String> responseEntity = restTemplate.exchange(entity.getUrl(),
                 HttpMethod.POST,
                 requestEntity, String.class);
@@ -139,11 +143,13 @@ public class ServiceImpl implements com.service.Service {
         // 处理响应
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String responseBody = responseEntity.getBody();
-            //转json
+            //转 json
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
-                return jsonNode.get("answer").toString();
+                //mark 返回全部
+                return jsonNode.toString();
+//                return jsonNode.get("answer").toString();
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
