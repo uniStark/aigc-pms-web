@@ -1,20 +1,29 @@
-# 使用 Node.js 镜像作为基础镜像
-FROM node:14-alpine
+# 使用官方 Node.js 镜像作为基础镜像
+FROM node:latest as build
 
 # 设置工作目录
 WORKDIR /app
 
-# 将 package.json 和 package-lock.json 复制到容器中
-COPY package*.json ./
+# 将 package.json 和 yarn.lock 拷贝到工作目录
+COPY package.json yarn.lock ./
 
-# 安装项目依赖（使用淘宝镜像
-RUN npm install -g cnpm --registry=https://registry.npm.taobao.org
+# 安装依赖
+RUN yarn install
 
-# 将项目文件复制到容器中
+# 拷贝项目文件到工作目录
 COPY . .
 
-# 构建生产版本
-RUN npm run build
+# 构建 React 项目
+RUN yarn build
 
-# 设置容器的默认命令
-CMD ["npm", "start"]
+# 使用 Nginx 镜像作为最终运行环境
+FROM nginx:latest
+
+# 将构建好的项目文件拷贝到 Nginx 默认的静态文件目录
+COPY --from=build /app/build /usr/share/nginx/html
+
+# 暴露端口，如果需要在容器外部访问，需要将对应端口映射到宿主机
+EXPOSE 3000
+
+# 容器启动时运行 Nginx
+CMD ["nginx", "-g", "daemon off;"]
